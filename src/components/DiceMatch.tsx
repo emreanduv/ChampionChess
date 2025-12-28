@@ -27,20 +27,26 @@ export default function DiceMatch({
     return Math.floor(Math.random() * 6) + 1
   }
 
-  const calculateScore = (baseRoll: number, teamStrength: number): number => {
+  const calculateScore = (baseRoll: number, teamStrength: number, isHome: boolean): number => {
     const strengthBonus = (teamStrength - 5) / 10
+    const homeAdvantage = isHome ? 0.15 : 0
+    const totalBonus = strengthBonus + homeAdvantage
 
     const bonusChance = Math.random()
     let finalScore = baseRoll
 
-    if (strengthBonus > 0) {
-      if (bonusChance < strengthBonus) {
+    if (totalBonus > 0) {
+      if (bonusChance < totalBonus) {
         finalScore = Math.min(6, baseRoll + 1)
       }
-    } else if (strengthBonus < 0) {
-      if (bonusChance < Math.abs(strengthBonus)) {
+    } else if (totalBonus < 0) {
+      if (bonusChance < Math.abs(totalBonus)) {
         finalScore = Math.max(1, baseRoll - 1)
       }
+    }
+
+    if (isHome && teamStrength >= 8 && Math.random() < 0.1) {
+      finalScore = Math.min(6, finalScore + 1)
     }
 
     return finalScore
@@ -55,8 +61,8 @@ export default function DiceMatch({
       const homeRoll = rollDice()
       const awayRoll = rollDice()
 
-      const homeFinal = calculateScore(homeRoll, homeTeam.strength)
-      const awayFinal = calculateScore(awayRoll, awayTeam.strength)
+      const homeFinal = calculateScore(homeRoll, homeTeam.strength, true)
+      const awayFinal = calculateScore(awayRoll, awayTeam.strength, false)
 
       setHomeScore(homeFinal)
       setAwayScore(awayFinal)

@@ -27,6 +27,7 @@ export default function ChessMatch({
 
   const opponentTeam = isHomeTeam ? awayTeam : homeTeam
   const playerOrientation = isHomeTeam ? 'w' : 'b'
+  const opponentIsAway = !isHomeTeam
 
   const boardColors = {
     lightSquare: isHomeTeam ? homeTeam.secondary_color : awayTeam.secondary_color,
@@ -42,14 +43,24 @@ export default function ChessMatch({
       setTimeout(() => {
         const gameCopy = new Chess(game.fen())
 
-        if (shouldAIResign(gameCopy, opponentTeam.strength)) {
+        let effectiveStrength = opponentTeam.strength
+
+        if (opponentIsAway) {
+          effectiveStrength = Math.max(1, effectiveStrength - 1.5)
+
+          if (opponentTeam.strength >= 8) {
+            effectiveStrength = Math.max(1, effectiveStrength - 0.5)
+          }
+        }
+
+        if (shouldAIResign(gameCopy, effectiveStrength)) {
           const homeScore = isHomeTeam ? 1 : 0
           const awayScore = isHomeTeam ? 0 : 1
           onMatchComplete(homeScore, awayScore, 'chess')
           return
         }
 
-        const moveMade = makeAIMove(gameCopy, opponentTeam.strength)
+        const moveMade = makeAIMove(gameCopy, effectiveStrength)
 
         if (moveMade) {
           const lastMove = gameCopy.history({ verbose: true }).pop()

@@ -202,20 +202,52 @@ export async function updateMatchResult(
 
 function simulateMatchScore(homeStrength: number, awayStrength: number): { homeScore: number; awayScore: number } {
   const strengthDiff = homeStrength - awayStrength
-  const homeAdvantage = 0.5
 
-  const homeChance = 0.5 + (strengthDiff / 20) + homeAdvantage / 10
-  const awayChance = 1 - homeChance
+  let homeAdvantage = 0.3
+  if (homeStrength >= 8) {
+    homeAdvantage = 0.5
+  } else if (homeStrength >= 6) {
+    homeAdvantage = 0.4
+  }
 
-  const avgGoals = 2.5
-  const homeExpectedGoals = avgGoals * (homeChance + 0.2)
-  const awayExpectedGoals = avgGoals * (awayChance + 0.2)
+  let awayPenalty = 0
+  if (awayStrength >= 8) {
+    awayPenalty = 0.3
+  } else if (awayStrength >= 6) {
+    awayPenalty = 0.2
+  }
 
-  let homeScore = Math.max(0, Math.round(homeExpectedGoals + (Math.random() - 0.5) * 2))
-  let awayScore = Math.max(0, Math.round(awayExpectedGoals + (Math.random() - 0.5) * 2))
+  const baseWinChance = 0.5 + (strengthDiff / 15)
+  const homeWinChance = Math.min(0.85, Math.max(0.15, baseWinChance + homeAdvantage / 10))
+  const awayWinChance = Math.min(0.85, Math.max(0.15, 1 - homeWinChance - awayPenalty / 10))
+  const drawChance = 1 - homeWinChance - awayWinChance
 
-  if (homeScore > 6) homeScore = 6
-  if (awayScore > 6) awayScore = 6
+  const outcome = Math.random()
+  let homeScore = 0
+  let awayScore = 0
+
+  if (outcome < homeWinChance) {
+    homeScore = Math.floor(Math.random() * 3) + 1
+    awayScore = Math.random() < 0.4 ? 0 : Math.floor(Math.random() * 2)
+
+    if (homeStrength >= 8 && awayStrength <= 5) {
+      homeScore += Math.random() < 0.4 ? 1 : 0
+    }
+  } else if (outcome < homeWinChance + drawChance) {
+    const drawScore = Math.random() < 0.5 ? (Math.random() < 0.6 ? 1 : 2) : 0
+    homeScore = drawScore
+    awayScore = drawScore
+  } else {
+    awayScore = Math.floor(Math.random() * 3) + 1
+    homeScore = Math.random() < 0.3 ? 0 : Math.floor(Math.random() * 2)
+
+    if (awayStrength - homeStrength >= 3) {
+      awayScore += Math.random() < 0.3 ? 1 : 0
+    }
+  }
+
+  if (homeScore > 5) homeScore = 5
+  if (awayScore > 5) awayScore = 5
 
   return { homeScore, awayScore }
 }
