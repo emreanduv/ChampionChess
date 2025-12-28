@@ -30,8 +30,8 @@ export default function ChessMatch({
   const opponentIsAway = !isHomeTeam
 
   const boardColors = {
-    lightSquare: isHomeTeam ? homeTeam.secondary_color : awayTeam.secondary_color,
-    darkSquare: isHomeTeam ? homeTeam.primary_color : awayTeam.primary_color,
+    lightSquare: homeTeam.secondary_color,
+    darkSquare: homeTeam.primary_color,
   }
 
   useEffect(() => {
