@@ -1,0 +1,27 @@
+{
+  "name": "Türkiye Süper Ligi - Championship Manager",
+  "short_name": "Süper Lig CM",
+  "description": "Türkiye Süper Ligi takımlarıyla Championship Manager tarzı futbol menajerlik oyunu. Satranç veya zar ile maç oyna!",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1e3a5f",
+  "theme_color": "#2d5f8d",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "sports"],
+  "lang": "tr",
+  "dir": "ltr"
+}
