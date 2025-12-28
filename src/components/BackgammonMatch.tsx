@@ -40,7 +40,7 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
     setTimeout(() => {
       const newState = { ...gameState, dice, availableMoves: [...dice] };
       setGameState(newState);
-      setMessage(`${dice.join(', ')} geldi! Taşını seç.`);
+      setMessage(`Zarlar: ${dice.join(', ')} geldi! Kalan: ${dice.length} hamle. Taşını seç.`);
       setIsRolling(false);
     }, 500);
   };
@@ -57,9 +57,16 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
       setSelectedPoint(pointIndex);
       const moves = getPossibleMoves(gameState, pointIndex);
       setPossibleMoves(moves);
-      setMessage('Hedef noktayı seç.');
+      if (moves.length > 0) {
+        const bearOffText = moves.includes(-1) ? ' veya Taşı Topla butonuna bas' : '';
+        setMessage(`Nokta ${pointIndex} seçildi. Yeşil işaretli noktaya tıkla${bearOffText}.`);
+      } else {
+        setMessage(`Nokta ${pointIndex}'den hamle yok. Başka taş seç.`);
+      }
     } else if (selectedPoint !== null && possibleMoves.includes(pointIndex)) {
       executeMove(selectedPoint, pointIndex);
+    } else if (pieces.length === 0 || pieces[0] !== playerNum) {
+      setMessage('Kendi taşlarını seç! Zarlar: ' + gameState.dice.join(', '));
     }
   };
 
@@ -86,10 +93,10 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
     }
 
     if (newState.availableMoves.length === 0) {
-      setMessage('Rakibin sırası...');
+      setMessage('Tüm hamleler yapıldı. Rakibin sırası...');
       setTimeout(() => aiTurn(newState), 1000);
     } else {
-      setMessage('Hamlenizi yapın.');
+      setMessage(`Kalan: ${newState.availableMoves.length} hamle. Taşını seç ve hamle yap.`);
     }
   };
 
@@ -149,15 +156,29 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
             : 'polygon(0% 0%, 100% 0%, 50% 100%)',
           position: 'relative',
           cursor: 'pointer',
-          border: isSelected ? '3px solid #FFD700' : isPossibleMove ? '3px solid #32CD32' : 'none',
-          boxShadow: isSelected ? '0 0 15px #FFD700' : isPossibleMove ? '0 0 10px #32CD32' : 'none',
-          transition: 'all 0.2s'
+          border: isSelected ? '4px solid #FFD700' : isPossibleMove ? '4px solid #00FF00' : '1px solid rgba(0,0,0,0.2)',
+          boxShadow: isSelected ? '0 0 20px #FFD700, inset 0 0 10px #FFD700' : isPossibleMove ? '0 0 20px #00FF00, inset 0 0 10px #00FF00' : 'none',
+          transition: 'all 0.2s',
+          transform: isSelected ? 'scale(1.05)' : isPossibleMove ? 'scale(1.03)' : 'scale(1)'
         }}
       >
         <div style={{
           position: 'absolute',
-          top: isTop ? '10px' : 'auto',
-          bottom: !isTop ? '10px' : 'auto',
+          [isTop ? 'top' : 'bottom']: '5px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          fontSize: '10px',
+          fontWeight: 'bold',
+          color: '#fff',
+          textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+          zIndex: 100
+        }}>
+          {pointIndex}
+        </div>
+        <div style={{
+          position: 'absolute',
+          top: isTop ? '20px' : 'auto',
+          bottom: !isTop ? '20px' : 'auto',
           left: '50%',
           transform: 'translateX(-50%)',
           display: 'flex',
@@ -267,6 +288,7 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
                     justifyContent: 'center',
                     fontSize: '28px',
                     fontWeight: 'bold',
+                    color: '#000',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
                     animation: isRolling ? 'roll 0.5s ease-in-out' : 'none'
                   }}
