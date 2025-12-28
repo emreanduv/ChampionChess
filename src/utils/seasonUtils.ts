@@ -54,6 +54,8 @@ async function generateFixtures(seasonId: string, teams: { id: string }[]) {
   const matchesPerRound = teamIds.length / 2
 
   for (let round = 0; round < totalRounds; round++) {
+    const roundFixtures: any[] = []
+
     for (let match = 0; match < matchesPerRound; match++) {
       const home = (round + match) % (teamIds.length - 1)
       const away = (teamIds.length - 1 - match + round) % (teamIds.length - 1)
@@ -62,18 +64,24 @@ async function generateFixtures(seasonId: string, teams: { id: string }[]) {
       let awayTeam = teamIds[away]
 
       if (homeTeam !== 'BYE' && awayTeam !== 'BYE') {
-        fixtures.push({
+        const shouldSwap = round % 2 === 1 && match % 2 === 0
+
+        roundFixtures.push({
           season_id: seasonId,
           week: round + 1,
-          home_team_id: homeTeam,
-          away_team_id: awayTeam,
+          home_team_id: shouldSwap ? awayTeam : homeTeam,
+          away_team_id: shouldSwap ? homeTeam : awayTeam,
           status: 'pending',
         })
       }
     }
+
+    fixtures.push(...roundFixtures)
   }
 
   for (let round = 0; round < totalRounds; round++) {
+    const roundFixtures: any[] = []
+
     for (let match = 0; match < matchesPerRound; match++) {
       const home = (round + match) % (teamIds.length - 1)
       const away = (teamIds.length - 1 - match + round) % (teamIds.length - 1)
@@ -82,15 +90,19 @@ async function generateFixtures(seasonId: string, teams: { id: string }[]) {
       let awayTeam = teamIds[away]
 
       if (homeTeam !== 'BYE' && awayTeam !== 'BYE') {
-        fixtures.push({
+        const shouldSwap = round % 2 === 0 && match % 2 === 1
+
+        roundFixtures.push({
           season_id: seasonId,
           week: round + totalRounds + 1,
-          home_team_id: awayTeam,
-          away_team_id: homeTeam,
+          home_team_id: shouldSwap ? homeTeam : awayTeam,
+          away_team_id: shouldSwap ? awayTeam : homeTeam,
           status: 'pending',
         })
       }
     }
+
+    fixtures.push(...roundFixtures)
   }
 
   await supabase.from('matches').insert(fixtures)
