@@ -132,7 +132,8 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
     const playerNum = pieces.length > 0 ? pieces[0] : 0;
     const color = playerNum === 1 ? homeTeam.primary_color : playerNum === 2 ? awayTeam.primary_color : '#8B4513';
 
-    const isEvenPoint = pointIndex % 2 === (pointIndex < 12 ? 0 : 1);
+    const colorPattern = [1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1];
+    const isEvenPoint = colorPattern[pointIndex] === 1;
     const pointColor = isEvenPoint ? '#D2691E' : '#F4A460';
 
     return (
@@ -140,8 +141,8 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
         key={pointIndex}
         onClick={() => handlePointClick(pointIndex)}
         style={{
-          width: '40px',
-          height: '180px',
+          width: '35px',
+          height: '160px',
           background: `linear-gradient(${isTop ? '180deg' : '0deg'}, ${pointColor} 0%, ${pointColor}dd 100%)`,
           clipPath: isTop
             ? 'polygon(50% 0%, 0% 100%, 100% 100%)'
@@ -168,8 +169,8 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
             <div
               key={i}
               style={{
-                width: '32px',
-                height: '32px',
+                width: '28px',
+                height: '28px',
                 borderRadius: '50%',
                 background: `radial-gradient(circle at 30% 30%, ${color}dd, ${color})`,
                 border: '2px solid rgba(0,0,0,0.3)',
@@ -232,32 +233,19 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
         padding: '20px',
         boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
       }}>
-        <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginBottom: '10px' }}>
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '10px' }}>
           {Array.from({ length: 6 }, (_, i) => i + 12).map(renderPoint)}
+          <div style={{ width: '60px', background: '#8B4513', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>BAR</div>
+          {Array.from({ length: 6 }, (_, i) => i + 18).map(renderPoint)}
         </div>
 
         <div style={{
           display: 'flex',
-          justifyContent: 'space-between',
+          justifyContent: 'center',
           alignItems: 'center',
           padding: '20px 0',
-          margin: '0 20px'
+          gap: '20px'
         }}>
-          <div style={{
-            background: 'linear-gradient(135deg, #8B4513, #A0522D)',
-            padding: '20px',
-            borderRadius: '12px',
-            minWidth: '120px',
-            textAlign: 'center',
-            color: '#fff',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-          }}>
-            <div style={{ fontSize: '12px', marginBottom: '5px', opacity: 0.9 }}>Bar</div>
-            <div style={{ fontSize: '24px', fontWeight: 'bold' }}>
-              {gameState.bar.home} | {gameState.bar.away}
-            </div>
-          </div>
-
           <div style={{ textAlign: 'center' }}>
             <div style={{
               display: 'flex',
@@ -288,67 +276,54 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
               ))}
             </div>
 
-            <button
-              onClick={handleRollDice}
-              disabled={gameState.availableMoves.length > 0 || isRolling || gameState.currentPlayer !== 'home'}
-              style={{
-                padding: '12px 32px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                background: gameState.availableMoves.length === 0 && !isRolling && gameState.currentPlayer === 'home'
-                  ? 'linear-gradient(135deg, #4CAF50, #45a049)'
-                  : 'linear-gradient(135deg, #999, #888)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '25px',
-                cursor: gameState.availableMoves.length === 0 && !isRolling && gameState.currentPlayer === 'home' ? 'pointer' : 'not-allowed',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                transition: 'all 0.3s',
-                marginBottom: '10px'
-              }}
-            >
-              {isRolling ? '🎲' : 'Zarları At'}
-            </button>
-
-            {possibleMoves.includes(-1) && (
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <button
-                onClick={handleBearOff}
+                onClick={handleRollDice}
+                disabled={gameState.availableMoves.length > 0 || isRolling || gameState.currentPlayer !== 'home'}
                 style={{
-                  padding: '10px 24px',
-                  fontSize: '14px',
+                  padding: '12px 32px',
+                  fontSize: '16px',
                   fontWeight: 'bold',
-                  background: 'linear-gradient(135deg, #FF6B6B, #E74C3C)',
+                  background: gameState.availableMoves.length === 0 && !isRolling && gameState.currentPlayer === 'home'
+                    ? 'linear-gradient(135deg, #4CAF50, #45a049)'
+                    : 'linear-gradient(135deg, #999, #888)',
                   color: 'white',
                   border: 'none',
-                  borderRadius: '20px',
-                  cursor: 'pointer',
+                  borderRadius: '25px',
+                  cursor: gameState.availableMoves.length === 0 && !isRolling && gameState.currentPlayer === 'home' ? 'pointer' : 'not-allowed',
                   boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                  marginLeft: '10px'
+                  transition: 'all 0.3s'
                 }}
               >
-                Taşı Topla
+                {isRolling ? '🎲' : 'Zarları At'}
               </button>
-            )}
-          </div>
 
-          <div style={{
-            background: 'linear-gradient(135deg, #8B4513, #A0522D)',
-            padding: '20px',
-            borderRadius: '12px',
-            minWidth: '120px',
-            textAlign: 'center',
-            color: '#fff',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
-          }}>
-            <div style={{ fontSize: '12px', marginBottom: '5px', opacity: 0.9 }}>Toplanan</div>
-            <div style={{ fontSize: '24px', fontWeight: 'bold' }}>
-              {gameState.off.home} | {gameState.off.away}
+              {possibleMoves.includes(-1) && (
+                <button
+                  onClick={handleBearOff}
+                  style={{
+                    padding: '12px 24px',
+                    fontSize: '16px',
+                    fontWeight: 'bold',
+                    background: 'linear-gradient(135deg, #FF6B6B, #E74C3C)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '25px',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
+                  }}
+                >
+                  Taşı Topla
+                </button>
+              )}
             </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '20px', justifyContent: 'center', marginTop: '10px' }}>
+        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '10px' }}>
           {Array.from({ length: 6 }, (_, i) => 11 - i).map(renderPoint)}
+          <div style={{ width: '60px', background: '#8B4513', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>OFF</div>
+          {Array.from({ length: 6 }, (_, i) => 5 - i).map(renderPoint)}
         </div>
       </div>
 

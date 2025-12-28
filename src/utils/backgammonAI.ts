@@ -93,7 +93,7 @@ export const isValidMove = (
 
 export const canBearOff = (state: BackgammonState, player: 'home' | 'away'): boolean => {
   const playerNum = getPlayerNumber(player);
-  const homeBoard = player === 'home' ? [0, 1, 2, 3, 4, 5] : [18, 19, 20, 21, 22, 23];
+  const homeBoard = player === 'home' ? [18, 19, 20, 21, 22, 23] : [0, 1, 2, 3, 4, 5];
 
   if (state.bar[player] > 0) {
     return false;
@@ -133,7 +133,7 @@ export const getPossibleMoves = (
     const toPoint = fromPoint + (die * direction);
 
     if (canBearOff(state, player)) {
-      const homeBoard = player === 'home' ? [0, 1, 2, 3, 4, 5] : [18, 19, 20, 21, 22, 23];
+      const homeBoard = player === 'home' ? [18, 19, 20, 21, 22, 23] : [0, 1, 2, 3, 4, 5];
       if (homeBoard.includes(fromPoint)) {
         if ((player === 'home' && toPoint >= 24) || (player === 'away' && toPoint < 0)) {
           moves.push(-1);
@@ -201,7 +201,7 @@ export const makeMove = (
 };
 
 export const makeAIMove = (state: BackgammonState): BackgammonState => {
-  let currentState = { ...state };
+  let currentState = JSON.parse(JSON.stringify(state)) as BackgammonState;
 
   while (currentState.availableMoves.length > 0) {
     let bestMove: { from: number; to: number; score: number } | null = null;
