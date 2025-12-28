@@ -824,6 +824,29 @@ td {
   font-size: 1rem;
 }
 
+.team-strengths {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  display: inline-flex;
+}
+
+.strength-info {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffcc00;
+}
+
+.strength-divider {
+  color: #8aa9d0;
+  font-weight: 700;
+}
+
 .dice-teams {
   display: flex;
   align-items: center;

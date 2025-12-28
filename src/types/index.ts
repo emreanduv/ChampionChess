@@ -6,6 +6,7 @@ export interface Team {
   primary_color: string
   secondary_color: string
   logo_url?: string
+  strength: number
 }
 
 export interface Season {

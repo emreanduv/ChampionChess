@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Chess } from 'chess.js'
 import { Chessboard } from 'react-chessboard'
 import { Team } from '../types'
+import { makeAIMove, shouldAIResign } from '../utils/chessAI'
 
 interface ChessMatchProps {
   homeTeam: Team
@@ -22,13 +23,69 @@ export default function ChessMatch({
 }: ChessMatchProps) {
   const [game, setGame] = useState(new Chess())
   const [moveHistory, setMoveHistory] = useState<string[]>([])
+  const [isThinking, setIsThinking] = useState(false)
+
+  const opponentTeam = isHomeTeam ? awayTeam : homeTeam
+  const playerOrientation = isHomeTeam ? 'w' : 'b'
 
   const boardColors = {
     lightSquare: isHomeTeam ? homeTeam.secondary_color : awayTeam.secondary_color,
     darkSquare: isHomeTeam ? homeTeam.primary_color : awayTeam.primary_color,
   }
 
+  useEffect(() => {
+    if (!game.isGameOver() && game.turn() !== playerOrientation && !isThinking) {
+      setIsThinking(true)
+
+      const thinkingTime = Math.max(500, Math.min(2000, 2500 - opponentTeam.strength * 200))
+
+      setTimeout(() => {
+        const gameCopy = new Chess(game.fen())
+
+        if (shouldAIResign(gameCopy, opponentTeam.strength)) {
+          const homeScore = isHomeTeam ? 1 : 0
+          const awayScore = isHomeTeam ? 0 : 1
+          onMatchComplete(homeScore, awayScore, 'chess')
+          return
+        }
+
+        const moveMade = makeAIMove(gameCopy, opponentTeam.strength)
+
+        if (moveMade) {
+          const lastMove = gameCopy.history({ verbose: true }).pop()
+          if (lastMove) {
+            setMoveHistory(prev => [...prev, lastMove.san])
+          }
+          setGame(gameCopy)
+
+          if (gameCopy.isGameOver()) {
+            setTimeout(() => {
+              let homeScore = 0
+              let awayScore = 0
+
+              if (gameCopy.isCheckmate()) {
+                if (gameCopy.turn() === 'w') {
+                  awayScore = 1
+                } else {
+                  homeScore = 1
+                }
+              }
+
+              onMatchComplete(homeScore, awayScore, 'chess')
+            }, 500)
+          }
+        }
+
+        setIsThinking(false)
+      }, thinkingTime)
+    }
+  }, [game, isThinking, opponentTeam.strength, isHomeTeam, playerOrientation, onMatchComplete])
+
   const onDrop = (sourceSquare: string, targetSquare: string) => {
+    if (isThinking || game.turn() !== playerOrientation) {
+      return false
+    }
+
     try {
       const gameCopy = new Chess(game.fen())
       const move = gameCopy.move({
@@ -88,7 +145,7 @@ export default function ChessMatch({
         </div>
         <div className="match-status">
           <div className="turn-indicator">
-            Sıra: {game.turn() === 'w' ? 'Beyaz' : 'Siyah'}
+            {isThinking ? 'Rakip düşünüyor...' : `Sıra: ${game.turn() === playerOrientation ? 'Sizin' : 'Rakip'}`}
           </div>
           {game.isCheck() && <div className="check-warning">ŞAH!</div>}
           {game.isGameOver() && (

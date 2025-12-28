@@ -27,16 +27,39 @@ export default function DiceMatch({
     return Math.floor(Math.random() * 6) + 1
   }
 
+  const calculateScore = (baseRoll: number, teamStrength: number): number => {
+    const strengthBonus = (teamStrength - 5) / 10
+
+    const bonusChance = Math.random()
+    let finalScore = baseRoll
+
+    if (strengthBonus > 0) {
+      if (bonusChance < strengthBonus) {
+        finalScore = Math.min(6, baseRoll + 1)
+      }
+    } else if (strengthBonus < 0) {
+      if (bonusChance < Math.abs(strengthBonus)) {
+        finalScore = Math.max(1, baseRoll - 1)
+      }
+    }
+
+    return finalScore
+  }
+
   const handleRoll = () => {
     setRolling(true)
     setHomeScore(null)
     setAwayScore(null)
 
     setTimeout(() => {
-      const home = rollDice()
-      const away = rollDice()
-      setHomeScore(home)
-      setAwayScore(away)
+      const homeRoll = rollDice()
+      const awayRoll = rollDice()
+
+      const homeFinal = calculateScore(homeRoll, homeTeam.strength)
+      const awayFinal = calculateScore(awayRoll, awayTeam.strength)
+
+      setHomeScore(homeFinal)
+      setAwayScore(awayFinal)
       setRolling(false)
       setCompleted(true)
     }, 1500)
@@ -59,6 +82,15 @@ export default function DiceMatch({
       <div className="dice-header">
         <h2>Hızlı Maç - Zar Atma</h2>
         <p>Her takım için bir zar atılacak, sonuç maç skorunu belirleyecek</p>
+        <div className="team-strengths">
+          <span className="strength-info">
+            {homeTeam.short_name}: Güç {homeTeam.strength}/10
+          </span>
+          <span className="strength-divider">|</span>
+          <span className="strength-info">
+            {awayTeam.short_name}: Güç {awayTeam.strength}/10
+          </span>
+        </div>
       </div>
 
       <div className="dice-teams">
