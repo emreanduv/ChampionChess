@@ -23,33 +23,31 @@ export default function DiceMatch({
   const [rolling, setRolling] = useState(false)
   const [completed, setCompleted] = useState(false)
 
-  const rollDice = () => {
-    return Math.floor(Math.random() * 6) + 1
-  }
+  const calculateScore = (teamStrength: number, opponentStrength: number, isHome: boolean): number => {
+    const strengthDiff = teamStrength - opponentStrength
+    const homeAdvantage = isHome ? 0.5 : 0
+    const effectiveStrength = teamStrength + homeAdvantage + (strengthDiff * 0.3)
 
-  const calculateScore = (baseRoll: number, teamStrength: number, isHome: boolean): number => {
-    const strengthBonus = (teamStrength - 5) / 10
-    const homeAdvantage = isHome ? 0.15 : 0
-    const totalBonus = strengthBonus + homeAdvantage
+    let goals = 0
 
-    const bonusChance = Math.random()
-    let finalScore = baseRoll
+    const roll1 = Math.random() * 10
+    const roll2 = Math.random() * 10
+    const roll3 = Math.random() * 10
 
-    if (totalBonus > 0) {
-      if (bonusChance < totalBonus) {
-        finalScore = Math.min(6, baseRoll + 1)
-      }
-    } else if (totalBonus < 0) {
-      if (bonusChance < Math.abs(totalBonus)) {
-        finalScore = Math.max(1, baseRoll - 1)
-      }
+    if (roll1 < effectiveStrength) goals++
+    if (roll2 < effectiveStrength) goals++
+    if (roll3 < effectiveStrength - 2) goals++
+
+    const surpriseFactor = Math.random()
+    if (surpriseFactor < 0.15 && strengthDiff < -2) {
+      goals = Math.min(goals + 1, 4)
     }
 
-    if (isHome && teamStrength >= 8 && Math.random() < 0.1) {
-      finalScore = Math.min(6, finalScore + 1)
+    if (surpriseFactor > 0.85 && strengthDiff > 2) {
+      goals = Math.max(goals - 1, 0)
     }
 
-    return finalScore
+    return Math.min(goals, 4)
   }
 
   const handleRoll = () => {
@@ -58,11 +56,8 @@ export default function DiceMatch({
     setAwayScore(null)
 
     setTimeout(() => {
-      const homeRoll = rollDice()
-      const awayRoll = rollDice()
-
-      const homeFinal = calculateScore(homeRoll, homeTeam.strength, true)
-      const awayFinal = calculateScore(awayRoll, awayTeam.strength, false)
+      const homeFinal = calculateScore(homeTeam.strength, awayTeam.strength, true)
+      const awayFinal = calculateScore(awayTeam.strength, homeTeam.strength, false)
 
       setHomeScore(homeFinal)
       setAwayScore(awayFinal)
@@ -78,16 +73,15 @@ export default function DiceMatch({
   }
 
   const getDiceEmoji = (score: number | null) => {
-    if (score === null) return '⚀'
-    const diceEmojis = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅']
-    return diceEmojis[score - 1]
+    if (score === null) return '⚽'
+    return '⚽'.repeat(Math.max(1, score))
   }
 
   return (
     <div className="dice-match">
       <div className="dice-header">
-        <h2>Hızlı Maç - Zar Atma</h2>
-        <p>Her takım için bir zar atılacak, sonuç maç skorunu belirleyecek</p>
+        <h2>Hızlı Maç - Simülasyon</h2>
+        <p>Takım güçlerine göre maç simüle edilecek ve sonuç hesaplanacak</p>
         <div className="team-strengths">
           <span className="strength-info">
             {homeTeam.short_name}: Güç {homeTeam.strength}/10
@@ -158,7 +152,7 @@ export default function DiceMatch({
             disabled={rolling}
             className="roll-button"
           >
-            {rolling ? 'Zarlar Atılıyor...' : 'Zarları At'}
+            {rolling ? 'Maç Oynanıyor...' : 'Maçı Oyna'}
           </button>
         )}
         {completed && (

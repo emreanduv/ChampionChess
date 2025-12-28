@@ -201,53 +201,35 @@ export async function updateMatchResult(
 }
 
 function simulateMatchScore(homeStrength: number, awayStrength: number): { homeScore: number; awayScore: number } {
-  const strengthDiff = homeStrength - awayStrength
+  const calculateScore = (teamStrength: number, opponentStrength: number, isHome: boolean): number => {
+    const strengthDiff = teamStrength - opponentStrength
+    const homeAdvantage = isHome ? 0.5 : 0
+    const effectiveStrength = teamStrength + homeAdvantage + (strengthDiff * 0.3)
 
-  let homeAdvantage = 0.3
-  if (homeStrength >= 8) {
-    homeAdvantage = 0.5
-  } else if (homeStrength >= 6) {
-    homeAdvantage = 0.4
-  }
+    let goals = 0
 
-  let awayPenalty = 0
-  if (awayStrength >= 8) {
-    awayPenalty = 0.3
-  } else if (awayStrength >= 6) {
-    awayPenalty = 0.2
-  }
+    const roll1 = Math.random() * 10
+    const roll2 = Math.random() * 10
+    const roll3 = Math.random() * 10
 
-  const baseWinChance = 0.5 + (strengthDiff / 15)
-  const homeWinChance = Math.min(0.85, Math.max(0.15, baseWinChance + homeAdvantage / 10))
-  const awayWinChance = Math.min(0.85, Math.max(0.15, 1 - homeWinChance - awayPenalty / 10))
-  const drawChance = 1 - homeWinChance - awayWinChance
+    if (roll1 < effectiveStrength) goals++
+    if (roll2 < effectiveStrength) goals++
+    if (roll3 < effectiveStrength - 2) goals++
 
-  const outcome = Math.random()
-  let homeScore = 0
-  let awayScore = 0
-
-  if (outcome < homeWinChance) {
-    homeScore = Math.floor(Math.random() * 3) + 1
-    awayScore = Math.random() < 0.4 ? 0 : Math.floor(Math.random() * 2)
-
-    if (homeStrength >= 8 && awayStrength <= 5) {
-      homeScore += Math.random() < 0.4 ? 1 : 0
+    const surpriseFactor = Math.random()
+    if (surpriseFactor < 0.15 && strengthDiff < -2) {
+      goals = Math.min(goals + 1, 4)
     }
-  } else if (outcome < homeWinChance + drawChance) {
-    const drawScore = Math.random() < 0.5 ? (Math.random() < 0.6 ? 1 : 2) : 0
-    homeScore = drawScore
-    awayScore = drawScore
-  } else {
-    awayScore = Math.floor(Math.random() * 3) + 1
-    homeScore = Math.random() < 0.3 ? 0 : Math.floor(Math.random() * 2)
 
-    if (awayStrength - homeStrength >= 3) {
-      awayScore += Math.random() < 0.3 ? 1 : 0
+    if (surpriseFactor > 0.85 && strengthDiff > 2) {
+      goals = Math.max(goals - 1, 0)
     }
+
+    return Math.min(goals, 4)
   }
 
-  if (homeScore > 5) homeScore = 5
-  if (awayScore > 5) awayScore = 5
+  const homeScore = calculateScore(homeStrength, awayStrength, true)
+  const awayScore = calculateScore(awayStrength, homeStrength, false)
 
   return { homeScore, awayScore }
 }
