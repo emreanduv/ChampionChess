@@ -673,8 +673,8 @@ td {
 
 .mode-buttons {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 2rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
 }
 
 .mode-button {
@@ -709,6 +709,11 @@ td {
 .mode-button p {
   color: #b0d4ff;
   font-size: 0.875rem;
+}
+
+.mode-button.backgammon:hover {
+  background: rgba(139, 69, 19, 0.2);
+  border-color: #8B4513;
 }
 
 .cancel-button {
@@ -1066,6 +1071,12 @@ td {
     gap: 3rem;
   }
 
+  .mode-buttons {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
   .mode-buttons {
     grid-template-columns: 1fr;
   }

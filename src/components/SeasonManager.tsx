@@ -46,7 +46,7 @@ export default function SeasonManager({
     setLoading(false)
   }
 
-  const handleMatchComplete = async (homeScore: number, awayScore: number, matchType: 'chess' | 'dice') => {
+  const handleMatchComplete = async (homeScore: number, awayScore: number, matchType: 'chess' | 'dice' | 'backgammon') => {
     if (!selectedMatch) return
 
     try {

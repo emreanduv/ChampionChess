@@ -2,12 +2,13 @@ import { useState } from 'react'
 import { Team, Match } from '../types'
 import ChessMatch from './ChessMatch'
 import DiceMatch from './DiceMatch'
+import BackgammonMatch from './BackgammonMatch'
 
 interface MatchScreenProps {
   match: Match & { home_team: Team; away_team: Team }
   userTeamId: string
   playerName: string
-  onMatchComplete: (homeScore: number, awayScore: number, matchType: 'chess' | 'dice') => void
+  onMatchComplete: (homeScore: number, awayScore: number, matchType: 'chess' | 'dice' | 'backgammon') => void
   onCancel: () => void
 }
 
@@ -18,7 +19,7 @@ export default function MatchScreen({
   onMatchComplete,
   onCancel,
 }: MatchScreenProps) {
-  const [selectedMode, setSelectedMode] = useState<'chess' | 'dice' | null>(null)
+  const [selectedMode, setSelectedMode] = useState<'chess' | 'dice' | 'backgammon' | null>(null)
   const isHomeTeam = match.home_team_id === userTeamId
 
   if (!selectedMode) {
@@ -67,6 +68,14 @@ export default function MatchScreen({
               <p>Strateji ile maçı kazan</p>
             </button>
             <button
+              className="mode-button backgammon"
+              onClick={() => setSelectedMode('backgammon')}
+            >
+              <div className="mode-icon">⚀⚁</div>
+              <h4>Tavla Oyna</h4>
+              <p>Tavla ile maçı kazan</p>
+            </button>
+            <button
               className="mode-button dice"
               onClick={() => setSelectedMode('dice')}
             >
@@ -87,6 +96,19 @@ export default function MatchScreen({
   if (selectedMode === 'chess') {
     return (
       <ChessMatch
+        homeTeam={match.home_team}
+        awayTeam={match.away_team}
+        isHomeTeam={isHomeTeam}
+        playerName={playerName}
+        onMatchComplete={onMatchComplete}
+        onCancel={() => setSelectedMode(null)}
+      />
+    )
+  }
+
+  if (selectedMode === 'backgammon') {
+    return (
+      <BackgammonMatch
         homeTeam={match.home_team}
         awayTeam={match.away_team}
         isHomeTeam={isHomeTeam}

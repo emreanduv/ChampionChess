@@ -207,7 +207,7 @@ export async function updateMatchResult(
   matchId: string,
   homeScore: number,
   awayScore: number,
-  matchType: 'chess' | 'dice'
+  matchType: 'chess' | 'dice' | 'backgammon'
 ) {
   const { data: match } = await supabase
     .from('matches')
