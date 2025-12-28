@@ -4,6 +4,7 @@ import { Season, Team } from './types'
 import { createSeason } from './utils/seasonUtils'
 import TeamSelection from './components/TeamSelection'
 import SeasonManager from './components/SeasonManager'
+import { initializeAdMob, showBannerAd } from './utils/admob'
 import './App.css'
 
 export default function App() {
@@ -14,6 +15,11 @@ export default function App() {
   const [existingSeason, setExistingSeason] = useState<(Season & { team: Team }) | null>(null)
 
   useEffect(() => {
+    const initApp = async () => {
+      await initializeAdMob()
+      await showBannerAd()
+    }
+    initApp()
     checkForActiveSeason()
   }, [])
 

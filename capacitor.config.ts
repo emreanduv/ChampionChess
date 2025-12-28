@@ -1,0 +1,23 @@
+import type { CapacitorConfig } from '@capacitor/cli';
+
+const config: CapacitorConfig = {
+  appId: 'com.championchess.manager',
+  appName: 'ChampionChess Manager',
+  webDir: 'dist',
+  android: {
+    allowMixedContent: true,
+    captureInput: true,
+    webContentsDebuggingEnabled: false
+  },
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 2000,
+      launchAutoHide: true,
+      backgroundColor: "#1e3a8a",
+      androidSplashResourceName: "splash",
+      showSpinner: false
+    }
+  }
+};
+
+export default config;
