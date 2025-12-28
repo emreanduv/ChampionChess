@@ -96,45 +96,25 @@ async function generateFixtures(seasonId: string, teams: { id: string }[]) {
   await supabase.from('matches').insert(fixtures)
 }
 
-export async function updateMatchResult(
-  matchId: string,
+async function updateStandings(
+  seasonId: string,
+  homeTeamId: string,
+  awayTeamId: string,
   homeScore: number,
-  awayScore: number,
-  matchType: 'chess' | 'dice'
+  awayScore: number
 ) {
-  const { data: match } = await supabase
-    .from('matches')
-    .select('*, home_team:teams!matches_home_team_id_fkey(*), away_team:teams!matches_away_team_id_fkey(*)')
-    .eq('id', matchId)
-    .single()
-
-  if (!match) {
-    throw new Error('Match not found')
-  }
-
-  await supabase
-    .from('matches')
-    .update({
-      home_score: homeScore,
-      away_score: awayScore,
-      match_type: matchType,
-      status: 'completed',
-      played_at: new Date().toISOString(),
-    })
-    .eq('id', matchId)
-
   const { data: homeStanding } = await supabase
     .from('league_standings')
     .select('*')
-    .eq('season_id', match.season_id)
-    .eq('team_id', match.home_team_id)
+    .eq('season_id', seasonId)
+    .eq('team_id', homeTeamId)
     .single()
 
   const { data: awayStanding } = await supabase
     .from('league_standings')
     .select('*')
-    .eq('season_id', match.season_id)
-    .eq('team_id', match.away_team_id)
+    .eq('season_id', seasonId)
+    .eq('team_id', awayTeamId)
     .single()
 
   if (homeStanding && awayStanding) {
@@ -187,5 +167,88 @@ export async function updateMatchResult(
         points: awayStanding.points + awayPoints,
       })
       .eq('id', awayStanding.id)
+  }
+}
+
+export async function updateMatchResult(
+  matchId: string,
+  homeScore: number,
+  awayScore: number,
+  matchType: 'chess' | 'dice'
+) {
+  const { data: match } = await supabase
+    .from('matches')
+    .select('*, home_team:teams!matches_home_team_id_fkey(*), away_team:teams!matches_away_team_id_fkey(*)')
+    .eq('id', matchId)
+    .single()
+
+  if (!match) {
+    throw new Error('Match not found')
+  }
+
+  await supabase
+    .from('matches')
+    .update({
+      home_score: homeScore,
+      away_score: awayScore,
+      match_type: matchType,
+      status: 'completed',
+      played_at: new Date().toISOString(),
+    })
+    .eq('id', matchId)
+
+  await updateStandings(match.season_id, match.home_team_id, match.away_team_id, homeScore, awayScore)
+}
+
+function simulateMatchScore(homeStrength: number, awayStrength: number): { homeScore: number; awayScore: number } {
+  const strengthDiff = homeStrength - awayStrength
+  const homeAdvantage = 0.5
+
+  const homeChance = 0.5 + (strengthDiff / 20) + homeAdvantage / 10
+  const awayChance = 1 - homeChance
+
+  const avgGoals = 2.5
+  const homeExpectedGoals = avgGoals * (homeChance + 0.2)
+  const awayExpectedGoals = avgGoals * (awayChance + 0.2)
+
+  let homeScore = Math.max(0, Math.round(homeExpectedGoals + (Math.random() - 0.5) * 2))
+  let awayScore = Math.max(0, Math.round(awayExpectedGoals + (Math.random() - 0.5) * 2))
+
+  if (homeScore > 6) homeScore = 6
+  if (awayScore > 6) awayScore = 6
+
+  return { homeScore, awayScore }
+}
+
+export async function simulateRemainingMatches(seasonId: string, week: number) {
+  const { data: matches } = await supabase
+    .from('matches')
+    .select('*, home_team:teams!matches_home_team_id_fkey(*), away_team:teams!matches_away_team_id_fkey(*)')
+    .eq('season_id', seasonId)
+    .eq('week', week)
+    .eq('status', 'pending')
+
+  if (!matches || matches.length === 0) {
+    return
+  }
+
+  for (const match of matches) {
+    const homeTeam = match.home_team as any
+    const awayTeam = match.away_team as any
+
+    const { homeScore, awayScore } = simulateMatchScore(homeTeam.strength, awayTeam.strength)
+
+    await supabase
+      .from('matches')
+      .update({
+        home_score: homeScore,
+        away_score: awayScore,
+        match_type: 'dice',
+        status: 'completed',
+        played_at: new Date().toISOString(),
+      })
+      .eq('id', match.id)
+
+    await updateStandings(seasonId, match.home_team_id, match.away_team_id, homeScore, awayScore)
   }
 }

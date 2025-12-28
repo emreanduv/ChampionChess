@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { Season, Match, Team } from '../types'
-import { updateMatchResult } from '../utils/seasonUtils'
+import { updateMatchResult, simulateRemainingMatches } from '../utils/seasonUtils'
 import MatchScreen from './MatchScreen'
 import LeagueTable from './LeagueTable'
 
@@ -52,32 +52,32 @@ export default function SeasonManager({
     try {
       await updateMatchResult(selectedMatch.id, homeScore, awayScore, matchType)
 
-      const newMatches = currentMatches.filter((m) => m.id !== selectedMatch.id)
-      setCurrentMatches(newMatches)
       setSelectedMatch(null)
+      setLoading(true)
 
-      if (newMatches.length === 0) {
-        const nextWeek = season.current_week + 1
-        if (nextWeek <= 34) {
-          await supabase
-            .from('seasons')
-            .update({ current_week: nextWeek, updated_at: new Date().toISOString() })
-            .eq('id', season.id)
+      await simulateRemainingMatches(season.id, season.current_week)
 
-          window.location.reload()
-        } else {
-          await supabase
-            .from('seasons')
-            .update({ status: 'completed', updated_at: new Date().toISOString() })
-            .eq('id', season.id)
+      const nextWeek = season.current_week + 1
+      if (nextWeek <= 34) {
+        await supabase
+          .from('seasons')
+          .update({ current_week: nextWeek, updated_at: new Date().toISOString() })
+          .eq('id', season.id)
 
-          alert('Sezon tamamlandı! Tebrikler!')
-          onSeasonEnd()
-        }
+        window.location.reload()
+      } else {
+        await supabase
+          .from('seasons')
+          .update({ status: 'completed', updated_at: new Date().toISOString() })
+          .eq('id', season.id)
+
+        alert('Sezon tamamlandı! Tebrikler!')
+        onSeasonEnd()
       }
     } catch (error) {
       console.error('Error updating match:', error)
       alert('Maç sonucu kaydedilirken bir hata oluştu.')
+      setLoading(false)
     }
   }
 
