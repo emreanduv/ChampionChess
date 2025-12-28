@@ -103,9 +103,9 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
     setPossibleMoves([]);
 
     if (newState.winner === 'home') {
-      setMessage(isHomeTeam ? 'Kazandınız!' : 'Rakip kazandı!');
+      setMessage('Kazandınız!');
       setTimeout(() => {
-        onMatchComplete(3, 0, 'backgammon');
+        onMatchComplete(isHomeTeam ? 3 : 0, isHomeTeam ? 0 : 3, 'backgammon');
       }, 1000);
       return;
     }
@@ -127,9 +127,9 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
 
       if (newState.winner === 'away') {
         setGameState(newState);
-        setMessage(isHomeTeam ? 'Rakip kazandı!' : 'Kazandınız!');
+        setMessage('Rakip kazandı!');
         setTimeout(() => {
-          onMatchComplete(0, 3, 'backgammon');
+          onMatchComplete(isHomeTeam ? 0 : 3, isHomeTeam ? 3 : 0, 'backgammon');
         }, 1000);
         return;
       }
@@ -155,7 +155,7 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
     const isPossibleMove = possibleMoves.includes(pointIndex);
 
     const playerNum = pieces.length > 0 ? pieces[0] : 0;
-    const color = playerNum === 1 ? homeTeam.primary_color : playerNum === 2 ? awayTeam.primary_color : '#8B4513';
+    const color = playerNum === 1 ? gameState.homeColor : playerNum === 2 ? gameState.awayColor : '#8B4513';
 
     const colorPattern = [1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1];
     const isEvenPoint = colorPattern[pointIndex] === 1;
@@ -253,21 +253,21 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
       }}>
         <div>
           <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '5px' }}>
-            {homeTeam.name}
+            {isHomeTeam ? homeTeam.name : awayTeam.name}
           </div>
           <div style={{ fontSize: '14px', opacity: 0.9 }}>Toplanan: {gameState.off.home}/15</div>
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '5px' }}>
-            {awayTeam.name}
+            {isHomeTeam ? awayTeam.name : homeTeam.name}
           </div>
           <div style={{ fontSize: '14px', opacity: 0.9 }}>Toplanan: {gameState.off.away}/15</div>
         </div>
       </div>
 
       <div style={{
-        background: `linear-gradient(135deg, ${homeTeam.primary_color}20, ${homeTeam.primary_color}10)`,
-        border: `4px solid ${homeTeam.primary_color}`,
+        background: `linear-gradient(135deg, ${gameState.homeColor}20, ${gameState.homeColor}10)`,
+        border: `4px solid ${gameState.homeColor}`,
         borderRadius: '16px',
         padding: '20px',
         boxShadow: '0 8px 24px rgba(0,0,0,0.2)'
