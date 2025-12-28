@@ -11,7 +11,7 @@ export default function App() {
   const [userTeam, setUserTeam] = useState<Team | null>(null)
   const [loading, setLoading] = useState(true)
   const [showLoadScreen, setShowLoadScreen] = useState(false)
-  const [savedSeasons, setSavedSeasons] = useState<(Season & { team: Team })[]>([])
+  const [existingSeason, setExistingSeason] = useState<(Season & { team: Team }) | null>(null)
 
   useEffect(() => {
     checkForActiveSeason()
@@ -19,17 +19,19 @@ export default function App() {
 
   const checkForActiveSeason = async () => {
     setLoading(true)
-    const { data: seasons } = await supabase
+    const { data: season } = await supabase
       .from('seasons')
       .select(`
         *,
         team:teams!seasons_selected_team_id_fkey(*)
       `)
+      .eq('status', 'active')
       .order('created_at', { ascending: false })
-      .limit(5)
+      .limit(1)
+      .maybeSingle()
 
-    if (seasons && seasons.length > 0) {
-      setSavedSeasons(seasons as any)
+    if (season) {
+      setExistingSeason(season as any)
       setShowLoadScreen(true)
     }
     setLoading(false)
@@ -54,16 +56,31 @@ export default function App() {
     }
   }
 
-  const handleLoadSeason = async (season: Season & { team: Team }) => {
-    setActiveSeason(season)
-    setUserTeam(season.team)
-    setShowLoadScreen(false)
+  const handleLoadSeason = async () => {
+    if (existingSeason) {
+      setActiveSeason(existingSeason)
+      setUserTeam(existingSeason.team)
+      setShowLoadScreen(false)
+    }
   }
 
-  const handleNewSeason = () => {
+  const handleNewSeason = async () => {
+    if (existingSeason) {
+      const confirmed = confirm(
+        'Mevcut sezonunuz silinecek ve yeni bir sezon başlatılacak. Devam etmek istiyor musunuz?'
+      )
+      if (!confirmed) return
+
+      await supabase
+        .from('seasons')
+        .update({ status: 'completed' })
+        .eq('id', existingSeason.id)
+    }
+
     setShowLoadScreen(false)
     setActiveSeason(null)
     setUserTeam(null)
+    setExistingSeason(null)
   }
 
   const handleSeasonEnd = () => {
@@ -81,7 +98,7 @@ export default function App() {
     )
   }
 
-  if (showLoadScreen && savedSeasons.length > 0) {
+  if (showLoadScreen && existingSeason) {
     return (
       <div className="app">
         <div className="load-screen">
@@ -89,33 +106,31 @@ export default function App() {
           <p className="subtitle">Championship Manager</p>
 
           <div className="load-options">
-            <div className="saved-seasons">
-              <h2>Kayıtlı Sezonlar</h2>
-              {savedSeasons.map((season) => (
+            <div className="existing-season-info">
+              <h2>Devam Eden Sezon</h2>
+              <div className="season-card-large">
                 <div
-                  key={season.id}
-                  className="saved-season-card"
-                  onClick={() => handleLoadSeason(season)}
-                >
-                  <div
-                    className="team-color-bar"
-                    style={{ backgroundColor: season.team.primary_color }}
-                  ></div>
-                  <div className="season-details">
-                    <h3>{season.team.name}</h3>
-                    <p className="player-name">{season.player_name}</p>
-                    <p className="week">Hafta {season.current_week}</p>
-                    <span className={`status ${season.status}`}>
-                      {season.status === 'active' ? 'Devam Ediyor' : 'Tamamlandı'}
-                    </span>
-                  </div>
+                  className="team-colors-banner"
+                  style={{
+                    background: `linear-gradient(135deg, ${existingSeason.team.primary_color} 0%, ${existingSeason.team.secondary_color} 100%)`,
+                  }}
+                ></div>
+                <div className="season-info-content">
+                  <h3>{existingSeason.team.name}</h3>
+                  <p className="player-name">Menajer: {existingSeason.player_name}</p>
+                  <p className="week-info">Hafta: {existingSeason.current_week} / 34</p>
                 </div>
-              ))}
+              </div>
             </div>
 
-            <button onClick={handleNewSeason} className="new-season-button">
-              Yeni Sezon Başlat
-            </button>
+            <div className="action-buttons">
+              <button onClick={handleLoadSeason} className="continue-button">
+                Devam Et
+              </button>
+              <button onClick={handleNewSeason} className="new-season-button">
+                Yeni Sezon Başlat
+              </button>
+            </div>
           </div>
         </div>
       </div>

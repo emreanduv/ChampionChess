@@ -52,6 +52,75 @@
   max-width: 600px;
 }
 
+.existing-season-info {
+  margin-bottom: 3rem;
+}
+
+.existing-season-info h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.season-card-large {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.season-card-large:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.team-colors-banner {
+  height: 120px;
+}
+
+.season-info-content {
+  padding: 2rem;
+  text-align: center;
+}
+
+.season-info-content h3 {
+  font-size: 1.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.week-info {
+  color: #8aa9d0;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.continue-button {
+  width: 100%;
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #34c759 0%, #30d158 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(52, 199, 89, 0.3);
+}
+
+.continue-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(52, 199, 89, 0.4);
+}
+
 .saved-seasons {
   margin-bottom: 2rem;
 }
