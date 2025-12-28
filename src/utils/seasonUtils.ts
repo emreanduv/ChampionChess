@@ -53,56 +53,77 @@ async function generateFixtures(seasonId: string, teams: { id: string }[]) {
   const totalRounds = teamIds.length - 1
   const matchesPerRound = teamIds.length / 2
 
-  for (let round = 0; round < totalRounds; round++) {
-    const roundFixtures: any[] = []
+  const teamLastWeekHome: Record<string, boolean> = {}
+  teamIds.forEach(id => {
+    teamLastWeekHome[id] = false
+  })
 
+  for (let round = 0; round < totalRounds; round++) {
     for (let match = 0; match < matchesPerRound; match++) {
       const home = (round + match) % (teamIds.length - 1)
       const away = (teamIds.length - 1 - match + round) % (teamIds.length - 1)
 
-      let homeTeam = match === 0 ? teamIds[teamIds.length - 1] : teamIds[home]
-      let awayTeam = teamIds[away]
+      let team1 = match === 0 ? teamIds[teamIds.length - 1] : teamIds[home]
+      let team2 = teamIds[away]
 
-      if (homeTeam !== 'BYE' && awayTeam !== 'BYE') {
-        const shouldSwap = round % 2 === 1 && match % 2 === 0
+      if (team1 !== 'BYE' && team2 !== 'BYE') {
+        let homeTeam = team1
+        let awayTeam = team2
 
-        roundFixtures.push({
+        const team1WasHome = teamLastWeekHome[team1]
+        const team2WasHome = teamLastWeekHome[team2]
+
+        if (team1WasHome && !team2WasHome) {
+          homeTeam = team2
+          awayTeam = team1
+        }
+
+        fixtures.push({
           season_id: seasonId,
           week: round + 1,
-          home_team_id: shouldSwap ? awayTeam : homeTeam,
-          away_team_id: shouldSwap ? homeTeam : awayTeam,
+          home_team_id: homeTeam,
+          away_team_id: awayTeam,
           status: 'pending',
         })
+
+        teamLastWeekHome[homeTeam] = true
+        teamLastWeekHome[awayTeam] = false
       }
     }
-
-    fixtures.push(...roundFixtures)
   }
 
   for (let round = 0; round < totalRounds; round++) {
-    const roundFixtures: any[] = []
-
     for (let match = 0; match < matchesPerRound; match++) {
       const home = (round + match) % (teamIds.length - 1)
       const away = (teamIds.length - 1 - match + round) % (teamIds.length - 1)
 
-      let homeTeam = match === 0 ? teamIds[teamIds.length - 1] : teamIds[home]
-      let awayTeam = teamIds[away]
+      let team1 = match === 0 ? teamIds[teamIds.length - 1] : teamIds[home]
+      let team2 = teamIds[away]
 
-      if (homeTeam !== 'BYE' && awayTeam !== 'BYE') {
-        const shouldSwap = round % 2 === 0 && match % 2 === 1
+      if (team1 !== 'BYE' && team2 !== 'BYE') {
+        let homeTeam = team2
+        let awayTeam = team1
 
-        roundFixtures.push({
+        const team1WasHome = teamLastWeekHome[team1]
+        const team2WasHome = teamLastWeekHome[team2]
+
+        if (team2WasHome && !team1WasHome) {
+          homeTeam = team1
+          awayTeam = team2
+        }
+
+        fixtures.push({
           season_id: seasonId,
           week: round + totalRounds + 1,
-          home_team_id: shouldSwap ? homeTeam : awayTeam,
-          away_team_id: shouldSwap ? awayTeam : homeTeam,
+          home_team_id: homeTeam,
+          away_team_id: awayTeam,
           status: 'pending',
         })
+
+        teamLastWeekHome[homeTeam] = true
+        teamLastWeekHome[awayTeam] = false
       }
     }
-
-    fixtures.push(...roundFixtures)
   }
 
   await supabase.from('matches').insert(fixtures)
