@@ -55,7 +55,12 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
     const playerNum = getPlayerNumber('home');
     const pieces = gameState.points[pointIndex];
 
-    if (pieces.length > 0 && pieces[0] === playerNum) {
+    // ÖNCE hamle yapılabilir mi kontrol et
+    if (selectedPoint !== null && possibleMoves.includes(pointIndex)) {
+      executeMove(selectedPoint, pointIndex);
+    }
+    // SONRA taş seçimi kontrol et
+    else if (pieces.length > 0 && pieces[0] === playerNum) {
       setSelectedPoint(pointIndex);
       const moves = getPossibleMoves(gameState, pointIndex);
       setPossibleMoves(moves);
@@ -65,8 +70,6 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
       } else {
         setMessage(`Nokta ${pointIndex}'den hamle yok. Başka taş seç.`);
       }
-    } else if (selectedPoint !== null && possibleMoves.includes(pointIndex)) {
-      executeMove(selectedPoint, pointIndex);
     } else if (pieces.length === 0 || pieces[0] !== playerNum) {
       setMessage('Kendi taşlarını seç! Zarlar: ' + gameState.dice.join(', '));
     }
