@@ -27,9 +27,11 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
   const [isRolling, setIsRolling] = useState(false);
 
   useEffect(() => {
-    const state = createInitialBackgammonState(homeTeam.primary_color, awayTeam.primary_color);
+    const playerColor = isHomeTeam ? homeTeam.primary_color : awayTeam.primary_color;
+    const opponentColor = isHomeTeam ? awayTeam.primary_color : homeTeam.primary_color;
+    const state = createInitialBackgammonState(playerColor, opponentColor);
     setGameState(state);
-  }, [homeTeam, awayTeam]);
+  }, [homeTeam, awayTeam, isHomeTeam]);
 
   const handleRollDice = () => {
     if (!gameState || gameState.availableMoves.length > 0 || isRolling) return;
@@ -79,6 +81,19 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
   const executeMove = (from: number, to: number) => {
     if (!gameState) return;
 
+    const playerNum = getPlayerNumber('home');
+    const opponentNum = playerNum === 1 ? 2 : 1;
+
+    let moveMessage = '';
+    if (to >= 0 && to < 24) {
+      const targetPieces = gameState.points[to];
+      if (targetPieces.length === 1 && targetPieces[0] === opponentNum) {
+        moveMessage = '💥 Rakibin taşını vurdun! ';
+      }
+    } else if (to === -1) {
+      moveMessage = '✅ Taş toplandı! ';
+    }
+
     const newState = makeMove(gameState, from, to);
     setGameState(newState);
     setSelectedPoint(null);
@@ -93,10 +108,10 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
     }
 
     if (newState.availableMoves.length === 0) {
-      setMessage('Tüm hamleler yapıldı. Rakibin sırası...');
+      setMessage(moveMessage + 'Tüm hamleler yapıldı. Rakibin sırası...');
       setTimeout(() => aiTurn(newState), 1000);
     } else {
-      setMessage(`Kalan: ${newState.availableMoves.length} hamle. Taşını seç ve hamle yap.`);
+      setMessage(moveMessage + `Kalan: ${newState.availableMoves.length} hamle. Taşını seç ve hamle yap.`);
     }
   };
 
