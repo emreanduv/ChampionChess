@@ -29,9 +29,33 @@ export default function ChessMatch({
   const playerOrientation = isHomeTeam ? 'w' : 'b'
   const opponentIsAway = !isHomeTeam
 
+  const getBrightness = (hexColor: string): number => {
+    const rgb = parseInt(hexColor.slice(1), 16)
+    const r = (rgb >> 16) & 0xff
+    const g = (rgb >> 8) & 0xff
+    const b = (rgb >> 0) & 0xff
+    return (r * 299 + g * 587 + b * 114) / 1000
+  }
+
+  const adjustColorForBoard = (hexColor: string, isLightSquare: boolean): string => {
+    const brightness = getBrightness(hexColor)
+
+    if (isLightSquare) {
+      if (brightness < 180) {
+        return '#f0d9b5'
+      }
+      return hexColor
+    } else {
+      if (brightness < 60) {
+        return '#b58863'
+      }
+      return hexColor
+    }
+  }
+
   const boardColors = {
-    lightSquare: homeTeam.secondary_color,
-    darkSquare: homeTeam.primary_color,
+    lightSquare: adjustColorForBoard(homeTeam.secondary_color, true),
+    darkSquare: adjustColorForBoard(homeTeam.primary_color, false),
   }
 
   useEffect(() => {
