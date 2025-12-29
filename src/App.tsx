@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import { Season, Team } from './types'
 import { createSeason } from './utils/seasonUtils'
+import { getDeviceId } from './utils/deviceId'
 import TeamSelection from './components/TeamSelection'
 import SeasonManager from './components/SeasonManager'
 import { initializeAdMob, showBannerAd } from './utils/admob'
@@ -25,6 +26,7 @@ export default function App() {
 
   const checkForActiveSeason = async () => {
     setLoading(true)
+    const deviceId = getDeviceId()
     const { data: season } = await supabase
       .from('seasons')
       .select(`
@@ -32,6 +34,7 @@ export default function App() {
         team:teams!seasons_selected_team_id_fkey(*)
       `)
       .eq('status', 'active')
+      .eq('player_device_id', deviceId)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()

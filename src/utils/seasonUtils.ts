@@ -1,6 +1,9 @@
 import { supabase } from '../lib/supabase'
+import { getDeviceId } from './deviceId'
 
 export async function createSeason(playerName: string, selectedTeamId: string) {
+  const deviceId = getDeviceId()
+
   const { data: season, error: seasonError } = await supabase
     .from('seasons')
     .insert({
@@ -8,6 +11,7 @@ export async function createSeason(playerName: string, selectedTeamId: string) {
       selected_team_id: selectedTeamId,
       current_week: 1,
       status: 'active',
+      player_device_id: deviceId,
     })
     .select()
     .single()
