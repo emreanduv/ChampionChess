@@ -2,6 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  padding-top: 60px;
 }
 
 .app-loading {
@@ -211,6 +212,8 @@
 .team-selection {
   min-height: 100vh;
   padding: 2rem;
+  padding-top: calc(2rem + 60px);
+  padding-bottom: calc(2rem + 60px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -358,6 +361,8 @@
 .season-manager {
   min-height: 100vh;
   padding: 2rem;
+  padding-top: calc(2rem + 60px);
+  padding-bottom: calc(2rem + 60px);
 }
 
 .season-header {
@@ -608,6 +613,7 @@ td {
   align-items: center;
   justify-content: center;
   padding: 2rem;
+  padding-top: calc(2rem + 60px);
 }
 
 .match-header {
@@ -735,6 +741,7 @@ td {
   max-width: 800px;
   margin: 0 auto;
   padding: 2rem;
+  padding-top: calc(2rem + 60px);
 }
 
 .match-info {
@@ -881,6 +888,7 @@ td {
   max-width: 800px;
   margin: 0 auto;
   padding: 2rem;
+  padding-top: calc(2rem + 60px);
 }
 
 .dice-header {

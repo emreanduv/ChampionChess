@@ -24,7 +24,7 @@ export const showBannerAd = async () => {
     await AdMob.showBanner({
       adId: 'ca-app-pub-3940256099942544/6300978111',
       adSize: BannerAdSize.ADAPTIVE_BANNER,
-      position: BannerAdPosition.BOTTOM_CENTER,
+      position: BannerAdPosition.TOP_CENTER,
       margin: 0,
       isTesting: false,
     });
