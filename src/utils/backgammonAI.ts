@@ -111,6 +111,34 @@ export const canBearOff = (state: BackgammonState, player: 'home' | 'away'): boo
   return true;
 };
 
+export const getPossibleMovesFromBar = (
+  state: BackgammonState,
+  player: 'home' | 'away'
+): number[] => {
+  const moves: number[] = [];
+  const playerNum = getPlayerNumber(player);
+  const opponentNum = playerNum === 1 ? 2 : 1;
+
+  const entryPoints = player === 'home' ? [0, 1, 2, 3, 4, 5] : [18, 19, 20, 21, 22, 23];
+  const startPoint = player === 'home' ? 0 : 23;
+  const direction = player === 'home' ? 1 : -1;
+
+  for (const die of state.availableMoves) {
+    const targetPoint = startPoint + ((die - 1) * direction);
+
+    if (entryPoints.includes(targetPoint)) {
+      const targetPieces = state.points[targetPoint];
+      if (targetPieces.length === 0 ||
+          targetPieces[0] === playerNum ||
+          (targetPieces.length === 1 && targetPieces[0] === opponentNum)) {
+        moves.push(targetPoint);
+      }
+    }
+  }
+
+  return [...new Set(moves)];
+};
+
 export const getPossibleMoves = (
   state: BackgammonState,
   fromPoint: number
@@ -119,6 +147,10 @@ export const getPossibleMoves = (
   const player = state.currentPlayer;
   const playerNum = getPlayerNumber(player);
   const direction = player === 'home' ? 1 : -1;
+
+  if (state.bar[player] > 0) {
+    return [];
+  }
 
   if (fromPoint === -1 || !state.availableMoves.length) {
     return moves;
@@ -167,7 +199,9 @@ export const makeMove = (
   const opponent = state.currentPlayer === 'home' ? 'away' : 'home';
   const direction = state.currentPlayer === 'home' ? 1 : -1;
 
-  if (fromPoint >= 0 && fromPoint < 24) {
+  if (fromPoint === -2) {
+    newState.bar[state.currentPlayer]--;
+  } else if (fromPoint >= 0 && fromPoint < 24) {
     newState.points[fromPoint] = newState.points[fromPoint].slice(1);
   }
 
@@ -202,10 +236,19 @@ export const makeMove = (
       newState.points[toPoint].push(playerNum);
     }
 
-    const dieUsed = (toPoint - fromPoint) * direction;
-    const dieIndex = newState.availableMoves.indexOf(dieUsed);
-    if (dieIndex !== -1) {
-      newState.availableMoves.splice(dieIndex, 1);
+    if (fromPoint === -2) {
+      const startPoint = state.currentPlayer === 'home' ? 0 : 23;
+      const dieUsed = Math.abs(toPoint - startPoint) + 1;
+      const dieIndex = newState.availableMoves.indexOf(dieUsed);
+      if (dieIndex !== -1) {
+        newState.availableMoves.splice(dieIndex, 1);
+      }
+    } else {
+      const dieUsed = (toPoint - fromPoint) * direction;
+      const dieIndex = newState.availableMoves.indexOf(dieUsed);
+      if (dieIndex !== -1) {
+        newState.availableMoves.splice(dieIndex, 1);
+      }
     }
   }
 
@@ -216,23 +259,40 @@ export const makeMove = (
   return newState;
 };
 
+export const findBestAIMove = (state: BackgammonState): { from: number; to: number } | null => {
+  let bestMove: { from: number; to: number; score: number } | null = null;
+
+  if (state.bar[state.currentPlayer] > 0) {
+    const barMoves = getPossibleMovesFromBar(state, state.currentPlayer);
+    for (const toPoint of barMoves) {
+      const score = Math.random();
+      if (!bestMove || score > bestMove.score) {
+        bestMove = { from: -2, to: toPoint, score };
+      }
+    }
+    return bestMove ? { from: bestMove.from, to: bestMove.to } : null;
+  }
+
+  for (let point = 0; point < 24; point++) {
+    const possibleMoves = getPossibleMoves(state, point);
+
+    for (const toPoint of possibleMoves) {
+      const score = Math.random();
+
+      if (!bestMove || score > bestMove.score) {
+        bestMove = { from: point, to: toPoint, score };
+      }
+    }
+  }
+
+  return bestMove ? { from: bestMove.from, to: bestMove.to } : null;
+};
+
 export const makeAIMove = (state: BackgammonState): BackgammonState => {
   let currentState = JSON.parse(JSON.stringify(state)) as BackgammonState;
 
   while (currentState.availableMoves.length > 0) {
-    let bestMove: { from: number; to: number; score: number } | null = null;
-
-    for (let point = 0; point < 24; point++) {
-      const possibleMoves = getPossibleMoves(currentState, point);
-
-      for (const toPoint of possibleMoves) {
-        const score = Math.random();
-
-        if (!bestMove || score > bestMove.score) {
-          bestMove = { from: point, to: toPoint, score };
-        }
-      }
-    }
+    const bestMove = findBestAIMove(currentState);
 
     if (!bestMove) {
       break;

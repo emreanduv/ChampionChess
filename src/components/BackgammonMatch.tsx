@@ -5,8 +5,9 @@ import {
   createInitialBackgammonState,
   rollDice,
   getPossibleMoves,
+  getPossibleMovesFromBar,
   makeMove,
-  makeAIMove,
+  findBestAIMove,
   getPlayerNumber
 } from '../utils/backgammonAI';
 
@@ -25,6 +26,8 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
   const [possibleMoves, setPossibleMoves] = useState<number[]>([]);
   const [message, setMessage] = useState('Zarları at!');
   const [isRolling, setIsRolling] = useState(false);
+  const [aiMoving, setAiMoving] = useState(false);
+  const [lastAIMove, setLastAIMove] = useState<{from: number, to: number} | null>(null);
 
   useEffect(() => {
     const playerColor = isHomeTeam ? homeTeam.primary_color : awayTeam.primary_color;
@@ -47,20 +50,44 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
     }, 500);
   };
 
+  const handleBarClick = () => {
+    if (!gameState || gameState.currentPlayer !== 'home' || gameState.availableMoves.length === 0 || aiMoving) {
+      return;
+    }
+
+    if (gameState.bar.home === 0) {
+      setMessage('Bar\'da taşın yok!');
+      return;
+    }
+
+    setSelectedPoint(-2);
+    const moves = getPossibleMovesFromBar(gameState, 'home');
+    setPossibleMoves(moves);
+    if (moves.length > 0) {
+      setMessage(`Bar\'dan taş seçildi. Yeşil işaretli noktaya tıkla.`);
+    } else {
+      setMessage('Bar\'dan giriş yapılamıyor! Tüm zarlar kullanıldı.');
+      setSelectedPoint(null);
+      setPossibleMoves([]);
+    }
+  };
+
   const handlePointClick = (pointIndex: number) => {
-    if (!gameState || gameState.currentPlayer !== 'home' || gameState.availableMoves.length === 0) {
+    if (!gameState || gameState.currentPlayer !== 'home' || gameState.availableMoves.length === 0 || aiMoving) {
       return;
     }
 
     const playerNum = getPlayerNumber('home');
     const pieces = gameState.points[pointIndex];
 
-    // ÖNCE hamle yapılabilir mi kontrol et
+    if (gameState.bar.home > 0) {
+      setMessage('Önce Bar\'daki taşlarını oyuna sok! Bar\'a tıkla.');
+      return;
+    }
+
     if (selectedPoint !== null && possibleMoves.includes(pointIndex)) {
       executeMove(selectedPoint, pointIndex);
-    }
-    // SONRA taş seçimi kontrol et
-    else if (pieces.length > 0 && pieces[0] === playerNum) {
+    } else if (pieces.length > 0 && pieces[0] === playerNum) {
       setSelectedPoint(pointIndex);
       const moves = getPossibleMoves(gameState, pointIndex);
       setPossibleMoves(moves);
@@ -118,15 +145,35 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
     }
   };
 
-  const aiTurn = (state: BackgammonState) => {
-    const dice = rollDice();
-    const stateWithDice = { ...state, dice, availableMoves: [...dice], currentPlayer: 'away' as const };
+  const makeNextAIMove = (currentState: BackgammonState) => {
+    const bestMove = findBestAIMove(currentState);
+
+    if (!bestMove) {
+      const finalState = {
+        ...currentState,
+        currentPlayer: 'home' as const,
+        availableMoves: [],
+        dice: []
+      };
+      setGameState(finalState);
+      setAiMoving(false);
+      setLastAIMove(null);
+      setMessage('Senin sıran! Zarları at.');
+      return;
+    }
+
+    setLastAIMove(bestMove);
+    const moveText = bestMove.from === -2 ? 'Bar\'dan' : `Nokta ${bestMove.from}\'den`;
+    const toText = bestMove.to === -1 ? 'toplandı' : `${bestMove.to}\'e`;
+    setMessage(`Rakip hamle yapıyor: ${moveText} ${toText}...`);
 
     setTimeout(() => {
-      const newState = makeAIMove(stateWithDice);
+      const newState = makeMove(currentState, bestMove.from, bestMove.to);
 
       if (newState.winner === 'away') {
         setGameState(newState);
+        setAiMoving(false);
+        setLastAIMove(null);
         setMessage('Rakip kazandı!');
         setTimeout(() => {
           onMatchComplete(isHomeTeam ? 0 : 3, isHomeTeam ? 3 : 0, 'backgammon');
@@ -134,16 +181,37 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
         return;
       }
 
-      const finalState = {
-        ...newState,
-        currentPlayer: 'home' as const,
-        availableMoves: [],
-        dice: []
-      };
+      setGameState(newState);
 
-      setGameState(finalState);
-      setMessage('Senin sıran! Zarları at.');
-    }, 1500);
+      if (newState.availableMoves.length > 0) {
+        setTimeout(() => makeNextAIMove(newState), 800);
+      } else {
+        const finalState = {
+          ...newState,
+          currentPlayer: 'home' as const,
+          availableMoves: [],
+          dice: []
+        };
+        setTimeout(() => {
+          setGameState(finalState);
+          setAiMoving(false);
+          setLastAIMove(null);
+          setMessage('Senin sıran! Zarları at.');
+        }, 500);
+      }
+    }, 800);
+  };
+
+  const aiTurn = (state: BackgammonState) => {
+    setAiMoving(true);
+    const dice = rollDice();
+    const stateWithDice = { ...state, dice, availableMoves: [...dice], currentPlayer: 'away' as const };
+
+    setMessage(`Rakip zarları attı: ${dice.join(', ')}`);
+    setTimeout(() => {
+      setGameState(stateWithDice);
+      setTimeout(() => makeNextAIMove(stateWithDice), 1000);
+    }, 1000);
   };
 
   const renderPoint = (pointIndex: number) => {
@@ -153,6 +221,8 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
     const isTop = pointIndex >= 12;
     const isSelected = selectedPoint === pointIndex;
     const isPossibleMove = possibleMoves.includes(pointIndex);
+    const isAIMoveSource = lastAIMove?.from === pointIndex;
+    const isAIMoveTarget = lastAIMove?.to === pointIndex;
 
     const playerNum = pieces.length > 0 ? pieces[0] : 0;
     const color = playerNum === 1 ? gameState.homeColor : playerNum === 2 ? gameState.awayColor : '#8B4513';
@@ -174,10 +244,10 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
             : 'polygon(0% 0%, 100% 0%, 50% 100%)',
           position: 'relative',
           cursor: 'pointer',
-          border: isSelected ? '4px solid #FFD700' : isPossibleMove ? '4px solid #00FF00' : '1px solid rgba(0,0,0,0.2)',
-          boxShadow: isSelected ? '0 0 20px #FFD700, inset 0 0 10px #FFD700' : isPossibleMove ? '0 0 20px #00FF00, inset 0 0 10px #00FF00' : 'none',
+          border: isSelected ? '4px solid #FFD700' : isPossibleMove ? '4px solid #00FF00' : isAIMoveSource ? '4px solid #FF6B6B' : isAIMoveTarget ? '4px solid #FF8C00' : '1px solid rgba(0,0,0,0.2)',
+          boxShadow: isSelected ? '0 0 20px #FFD700, inset 0 0 10px #FFD700' : isPossibleMove ? '0 0 20px #00FF00, inset 0 0 10px #00FF00' : isAIMoveSource ? '0 0 15px #FF6B6B' : isAIMoveTarget ? '0 0 15px #FF8C00' : 'none',
           transition: 'all 0.2s',
-          transform: isSelected ? 'scale(1.05)' : isPossibleMove ? 'scale(1.03)' : 'scale(1)'
+          transform: isSelected ? 'scale(1.05)' : isPossibleMove ? 'scale(1.03)' : (isAIMoveSource || isAIMoveTarget) ? 'scale(1.02)' : 'scale(1)'
         }}
       >
         <div style={{
@@ -274,7 +344,72 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
       }}>
         <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '10px' }}>
           {Array.from({ length: 6 }, (_, i) => i + 12).map(renderPoint)}
-          <div style={{ width: '60px', background: '#8B4513', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold', fontSize: '14px' }}>BAR</div>
+          <div
+            onClick={handleBarClick}
+            style={{
+              width: '60px',
+              background: gameState.bar.home > 0 && selectedPoint === -2 ? 'linear-gradient(135deg, #FFD700, #FFA500)' : '#8B4513',
+              borderRadius: '8px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#fff',
+              fontWeight: 'bold',
+              fontSize: '12px',
+              cursor: gameState.bar.home > 0 ? 'pointer' : 'default',
+              border: selectedPoint === -2 ? '4px solid #FFD700' : gameState.bar.home > 0 ? '2px solid #FFD700' : '1px solid rgba(0,0,0,0.2)',
+              boxShadow: selectedPoint === -2 ? '0 0 20px #FFD700' : 'none',
+              position: 'relative',
+              transition: 'all 0.2s'
+            }}>
+            <div>BAR</div>
+            {gameState.bar.home > 0 && (
+              <div style={{
+                marginTop: '5px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2px',
+                alignItems: 'center'
+              }}>
+                {Array.from({ length: Math.min(gameState.bar.home, 3) }).map((_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      width: '22px',
+                      height: '22px',
+                      borderRadius: '50%',
+                      background: `radial-gradient(circle at 30% 30%, ${gameState.homeColor}dd, ${gameState.homeColor})`,
+                      border: '2px solid rgba(0,0,0,0.3)',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                    }}
+                  />
+                ))}
+                {gameState.bar.home > 3 && (
+                  <div style={{ color: '#FFD700', fontSize: '10px', fontWeight: 'bold' }}>
+                    +{gameState.bar.home - 3}
+                  </div>
+                )}
+              </div>
+            )}
+            {gameState.bar.away > 0 && (
+              <div style={{
+                position: 'absolute',
+                top: '5px',
+                right: '5px',
+                background: 'rgba(255,0,0,0.8)',
+                borderRadius: '50%',
+                width: '18px',
+                height: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '10px'
+              }}>
+                {gameState.bar.away}
+              </div>
+            )}
+          </div>
           {Array.from({ length: 6 }, (_, i) => i + 18).map(renderPoint)}
         </div>
 

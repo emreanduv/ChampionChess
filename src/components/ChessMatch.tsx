@@ -78,8 +78,8 @@ export default function ChessMatch({
         }
 
         if (shouldAIResign(gameCopy, effectiveStrength)) {
-          const homeScore = isHomeTeam ? 1 : 0
-          const awayScore = isHomeTeam ? 0 : 1
+          const homeScore = isHomeTeam ? 3 : 0
+          const awayScore = isHomeTeam ? 0 : 3
           onMatchComplete(homeScore, awayScore, 'chess')
           return
         }
@@ -100,10 +100,13 @@ export default function ChessMatch({
 
               if (gameCopy.isCheckmate()) {
                 if (gameCopy.turn() === 'w') {
-                  awayScore = 1
+                  awayScore = 3
                 } else {
-                  homeScore = 1
+                  homeScore = 3
                 }
+              } else if (gameCopy.isDraw() || gameCopy.isStalemate() || gameCopy.isThreefoldRepetition() || gameCopy.isInsufficientMaterial()) {
+                homeScore = 1
+                awayScore = 1
               }
 
               onMatchComplete(homeScore, awayScore, 'chess')
@@ -141,10 +144,13 @@ export default function ChessMatch({
 
           if (gameCopy.isCheckmate()) {
             if (gameCopy.turn() === 'w') {
-              awayScore = 1
+              awayScore = 3
             } else {
-              homeScore = 1
+              homeScore = 3
             }
+          } else if (gameCopy.isDraw() || gameCopy.isStalemate() || gameCopy.isThreefoldRepetition() || gameCopy.isInsufficientMaterial()) {
+            homeScore = 1
+            awayScore = 1
           }
 
           onMatchComplete(homeScore, awayScore, 'chess')
@@ -159,8 +165,8 @@ export default function ChessMatch({
 
   const handleForfeit = () => {
     if (confirm('Maçı terk etmek istediğinize emin misiniz? Bu maç yenilgi olarak kaydedilecek.')) {
-      const homeScore = isHomeTeam ? 0 : 1
-      const awayScore = isHomeTeam ? 1 : 0
+      const homeScore = isHomeTeam ? 0 : 3
+      const awayScore = isHomeTeam ? 3 : 0
       onMatchComplete(homeScore, awayScore, 'chess')
     }
   }
