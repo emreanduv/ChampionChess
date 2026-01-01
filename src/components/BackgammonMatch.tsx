@@ -115,10 +115,14 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
     const opponentNum = playerNum === 1 ? 2 : 1;
 
     let moveMessage = '';
+    if (from === -2) {
+      moveMessage = '🔄 Bar\'dan oyuna girdin! ';
+    }
+
     if (to >= 0 && to < 24) {
       const targetPieces = gameState.points[to];
       if (targetPieces.length === 1 && targetPieces[0] === opponentNum) {
-        moveMessage = '💥 Rakibin taşını vurdun! ';
+        moveMessage += '💥 Rakibin taşını vurdun! ';
       }
     } else if (to === -1) {
       moveMessage = '✅ Taş toplandı! ';
