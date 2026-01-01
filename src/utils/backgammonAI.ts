@@ -129,14 +129,18 @@ export const getPossibleMoves = (
     return moves;
   }
 
-  for (const die of state.availableMoves) {
+  const uniqueDice = [...new Set(state.availableMoves)];
+
+  for (const die of uniqueDice) {
     const toPoint = fromPoint + (die * direction);
 
     if (canBearOff(state, player)) {
       const homeBoard = player === 'home' ? [18, 19, 20, 21, 22, 23] : [0, 1, 2, 3, 4, 5];
       if (homeBoard.includes(fromPoint)) {
         if ((player === 'home' && toPoint >= 24) || (player === 'away' && toPoint < 0)) {
-          moves.push(-1);
+          if (!moves.includes(-1)) {
+            moves.push(-1);
+          }
           continue;
         }
       }
@@ -161,6 +165,7 @@ export const makeMove = (
   const playerNum = getPlayerNumber(state.currentPlayer);
   const opponentNum = playerNum === 1 ? 2 : 1;
   const opponent = state.currentPlayer === 'home' ? 'away' : 'home';
+  const direction = state.currentPlayer === 'home' ? 1 : -1;
 
   if (fromPoint >= 0 && fromPoint < 24) {
     newState.points[fromPoint] = newState.points[fromPoint].slice(1);
@@ -169,9 +174,21 @@ export const makeMove = (
   if (toPoint === -1) {
     newState.off[state.currentPlayer]++;
 
-    const dieUsed = Math.abs(fromPoint - (state.currentPlayer === 'home' ? 24 : -1));
-    const minDie = Math.min(...newState.availableMoves);
-    const dieIndex = newState.availableMoves.indexOf(dieUsed >= minDie ? dieUsed : minDie);
+    const distanceNeeded = state.currentPlayer === 'home'
+      ? 24 - fromPoint
+      : fromPoint + 1;
+
+    let dieToUse = distanceNeeded;
+    if (!newState.availableMoves.includes(distanceNeeded)) {
+      const validDice = newState.availableMoves.filter(d => d >= distanceNeeded);
+      if (validDice.length > 0) {
+        dieToUse = Math.min(...validDice);
+      } else {
+        dieToUse = newState.availableMoves[0];
+      }
+    }
+
+    const dieIndex = newState.availableMoves.indexOf(dieToUse);
     if (dieIndex !== -1) {
       newState.availableMoves.splice(dieIndex, 1);
     }
@@ -185,7 +202,6 @@ export const makeMove = (
       newState.points[toPoint].push(playerNum);
     }
 
-    const direction = state.currentPlayer === 'home' ? 1 : -1;
     const dieUsed = (toPoint - fromPoint) * direction;
     const dieIndex = newState.availableMoves.indexOf(dieUsed);
     if (dieIndex !== -1) {

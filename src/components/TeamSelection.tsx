@@ -48,7 +48,7 @@ export default function TeamSelection({ onTeamSelected }: TeamSelectionProps) {
     <div className="team-selection">
       <div className="selection-header">
         <h1>Türkiye Süper Ligi</h1>
-        <p className="subtitle">Championship Manager</p>
+        <p className="subtitle">ChampionChess Manager</p>
       </div>
 
       <div className="player-name-section">

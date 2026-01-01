@@ -112,7 +112,7 @@ export default function App() {
       <div className="app">
         <div className="load-screen">
           <h1>Türkiye Süper Ligi</h1>
-          <p className="subtitle">Championship Manager</p>
+          <p className="subtitle">ChampionChess Manager</p>
 
           <div className="load-options">
             <div className="existing-season-info">
