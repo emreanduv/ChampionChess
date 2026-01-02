@@ -316,14 +316,14 @@ export async function simulateRemainingMatches(seasonId: string, week: number, m
       const outcome = Math.random()
 
       if (outcome < winProbability * 0.85) {
-        homeScore = 1
+        homeScore = 3
         awayScore = 0
       } else if (outcome < winProbability * 0.85 + 0.15) {
-        homeScore = 0
-        awayScore = 0
+        homeScore = 1
+        awayScore = 1
       } else {
         homeScore = 0
-        awayScore = 1
+        awayScore = 3
       }
     } else {
       const result = simulateMatchScore(homeTeam.strength, awayTeam.strength)
