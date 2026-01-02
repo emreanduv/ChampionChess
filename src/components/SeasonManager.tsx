@@ -55,7 +55,7 @@ export default function SeasonManager({
       setSelectedMatch(null)
       setLoading(true)
 
-      await simulateRemainingMatches(season.id, season.current_week)
+      await simulateRemainingMatches(season.id, season.current_week, matchType)
 
       const nextWeek = season.current_week + 1
       if (nextWeek <= 34) {

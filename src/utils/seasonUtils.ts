@@ -271,7 +271,7 @@ function simulateMatchScore(homeStrength: number, awayStrength: number): { homeS
   return { homeScore, awayScore }
 }
 
-export async function simulateRemainingMatches(seasonId: string, week: number) {
+export async function simulateRemainingMatches(seasonId: string, week: number, matchType: 'chess' | 'dice' | 'backgammon' = 'dice') {
   const { data: matches } = await supabase
     .from('matches')
     .select('*, home_team:teams!matches_home_team_id_fkey(*), away_team:teams!matches_away_team_id_fkey(*)')
@@ -287,14 +287,56 @@ export async function simulateRemainingMatches(seasonId: string, week: number) {
     const homeTeam = match.home_team as any
     const awayTeam = match.away_team as any
 
-    const { homeScore, awayScore } = simulateMatchScore(homeTeam.strength, awayTeam.strength)
+    let homeScore: number
+    let awayScore: number
+
+    if (matchType === 'backgammon') {
+      const winProbability = homeTeam.strength / (homeTeam.strength + awayTeam.strength)
+      const homeWins = Math.random() < winProbability
+
+      const winType = Math.random()
+      let points: number
+      if (winType < 0.6) {
+        points = 1
+      } else if (winType < 0.85) {
+        points = 2
+      } else {
+        points = 3
+      }
+
+      if (homeWins) {
+        homeScore = points
+        awayScore = 0
+      } else {
+        homeScore = 0
+        awayScore = points
+      }
+    } else if (matchType === 'chess') {
+      const winProbability = homeTeam.strength / (homeTeam.strength + awayTeam.strength)
+      const outcome = Math.random()
+
+      if (outcome < winProbability * 0.85) {
+        homeScore = 1
+        awayScore = 0
+      } else if (outcome < winProbability * 0.85 + 0.15) {
+        homeScore = 0
+        awayScore = 0
+      } else {
+        homeScore = 0
+        awayScore = 1
+      }
+    } else {
+      const result = simulateMatchScore(homeTeam.strength, awayTeam.strength)
+      homeScore = result.homeScore
+      awayScore = result.awayScore
+    }
 
     await supabase
       .from('matches')
       .update({
         home_score: homeScore,
         away_score: awayScore,
-        match_type: 'dice',
+        match_type: matchType,
         status: 'completed',
         played_at: new Date().toISOString(),
       })
