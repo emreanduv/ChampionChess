@@ -134,9 +134,15 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
     setPossibleMoves([]);
 
     if (newState.winner === 'home') {
-      setMessage('Kazandınız!');
+      const winPoints = newState.winType === 'backgammon' ? 3 : newState.winType === 'mars' ? 2 : 1;
+      const winTypeText = newState.winType === 'backgammon' ? ' (Eşek Marsı!)' : newState.winType === 'mars' ? ' (Mars!)' : '';
+      setMessage('Kazandınız!' + winTypeText);
       setTimeout(() => {
-        onMatchComplete(isHomeTeam ? 3 : 0, isHomeTeam ? 0 : 3, 'backgammon');
+        onMatchComplete(
+          isHomeTeam ? winPoints : 0,
+          isHomeTeam ? 0 : winPoints,
+          'backgammon'
+        );
       }, 1000);
       return;
     }
@@ -178,9 +184,15 @@ const BackgammonMatch = ({ homeTeam, awayTeam, isHomeTeam, onMatchComplete }: Ba
         setGameState(newState);
         setAiMoving(false);
         setLastAIMove(null);
-        setMessage('Rakip kazandı!');
+        const winPoints = newState.winType === 'backgammon' ? 3 : newState.winType === 'mars' ? 2 : 1;
+        const winTypeText = newState.winType === 'backgammon' ? ' (Eşek Marsı!)' : newState.winType === 'mars' ? ' (Mars!)' : '';
+        setMessage('Rakip kazandı!' + winTypeText);
         setTimeout(() => {
-          onMatchComplete(isHomeTeam ? 0 : 3, isHomeTeam ? 3 : 0, 'backgammon');
+          onMatchComplete(
+            isHomeTeam ? 0 : winPoints,
+            isHomeTeam ? winPoints : 0,
+            'backgammon'
+          );
         }, 1000);
         return;
       }

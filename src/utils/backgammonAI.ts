@@ -12,6 +12,7 @@ export interface BackgammonState {
   availableMoves: number[];
   selectedPoint: number | null;
   winner: 'home' | 'away' | null;
+  winType: 'normal' | 'mars' | 'backgammon' | null;
   homeColor: string;
   awayColor: string;
 }
@@ -38,6 +39,7 @@ export const createInitialBackgammonState = (homeColor: string, awayColor: strin
     availableMoves: [],
     selectedPoint: null,
     winner: null,
+    winType: null,
     homeColor,
     awayColor
   };
@@ -249,6 +251,26 @@ export const makeMove = (
 
   if (newState.off[state.currentPlayer] === 15) {
     newState.winner = state.currentPlayer;
+
+    const opponent = state.currentPlayer === 'home' ? 'away' : 'home';
+    const opponentPiecesOff = newState.off[opponent];
+
+    if (opponentPiecesOff === 0) {
+      const opponentNum = getPlayerNumber(opponent);
+      const opponentHomeBoard = opponent === 'home' ? [18, 19, 20, 21, 22, 23] : [0, 1, 2, 3, 4, 5];
+      const hasOpponentInHomeBoard = opponentHomeBoard.some(point =>
+        newState.points[point].some(p => p === opponentNum)
+      );
+      const hasOpponentOnBar = newState.bar[opponent] > 0;
+
+      if (hasOpponentInHomeBoard || hasOpponentOnBar) {
+        newState.winType = 'backgammon';
+      } else {
+        newState.winType = 'mars';
+      }
+    } else {
+      newState.winType = 'normal';
+    }
   }
 
   return newState;
