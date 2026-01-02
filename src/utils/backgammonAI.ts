@@ -122,7 +122,7 @@ export const getPossibleMovesFromBar = (
   const opponentNum = playerNum === 1 ? 2 : 1;
 
   for (const die of state.availableMoves) {
-    const targetPoint = player === 'home' ? die - 1 : 24 - die;
+    const targetPoint = player === 'home' ? 24 - die : die - 1;
 
     if (targetPoint >= 0 && targetPoint < 24) {
       const targetPieces = state.points[targetPoint];
@@ -235,7 +235,7 @@ export const makeMove = (
     }
 
     if (fromPoint === -2) {
-      const dieUsed = state.currentPlayer === 'home' ? toPoint + 1 : 24 - toPoint;
+      const dieUsed = state.currentPlayer === 'home' ? 24 - toPoint : toPoint + 1;
       const dieIndex = newState.availableMoves.indexOf(dieUsed);
       if (dieIndex !== -1) {
         newState.availableMoves.splice(dieIndex, 1);
